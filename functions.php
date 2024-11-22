@@ -22,14 +22,20 @@ function createApplicant($data)
     }
 }
 
-function readApplicants($search = '')
-{
+function readApplicants($search = '') {
     global $db;
     try {
-        $query = "SELECT * FROM applicants WHERE firstName LIKE :search OR lastName LIKE :search OR email LIKE :search 
-                  OR phone LIKE :search OR specialization LIKE :search OR favoriteDBMS LIKE :search OR favoriteFrontendFramework LIKE :search";
+        // Ensure the search term is not empty and avoid SQL injection
+        $searchTerm = '%' . $search . '%';
+
+        // Query to search only by first name or last name
+        $query = "SELECT * FROM applicants 
+                  WHERE firstName LIKE :search 
+                  OR lastName LIKE :search";
+
         $stmt = $db->prepare($query);
-        $stmt->execute([':search' => "%$search%"]);
+        $stmt->execute([':search' => $searchTerm]);
+
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return [
@@ -143,11 +149,21 @@ function getApplicantById($id) {
 }
 
 
-function getAllApplicants() {
+function getAllApplicants($searchTerm = '') {
     global $db;
 
     try {
-        $stmt = $db->query("SELECT * FROM applicants ORDER BY id DESC");
+        // Ensure that the search term is properly handled
+        $searchTerm = '%' . strtolower($searchTerm) . '%';  // To make the search case-insensitive
+
+        // SQL query to filter applicants by first name or last name
+        $sql = "SELECT * FROM applicants 
+                WHERE LOWER(firstName) LIKE :searchTerm 
+                OR LOWER(lastName) LIKE :searchTerm 
+                ORDER BY id DESC";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':searchTerm' => $searchTerm]);
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return [
@@ -162,4 +178,5 @@ function getAllApplicants() {
         ];
     }
 }
+
 

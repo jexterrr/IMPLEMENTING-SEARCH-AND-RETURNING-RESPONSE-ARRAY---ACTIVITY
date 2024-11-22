@@ -2,6 +2,7 @@
 require_once 'functions.php';
 
 $message = null; // To store the system message
+$searchTerm = ''; // To store the search term
 
 // Check for success messages based on query parameters
 if (isset($_GET['success'])) {
@@ -23,8 +24,13 @@ if (isset($_GET['success'])) {
     }
 }
 
-// Fetch all applicants
-$applicantsResponse = getAllApplicants();
+// Handle search functionality
+if (isset($_GET['search'])) {
+    $searchTerm = $_GET['search'];
+}
+
+// Fetch all applicants (filtered by search term if any)
+$applicantsResponse = getAllApplicants($searchTerm); // Pass the search term here
 $applicants = [];
 
 if ($applicantsResponse['statusCode'] === 200) {
@@ -40,25 +46,32 @@ if ($applicantsResponse['statusCode'] === 200) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Applicant List</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <h1>Applicant List</h1>
 
-    <!-- Display System Message -->
-    <?php if ($message): ?>
-        <div id="system-message" class="message <?= $message['type'] ?>">
-            <?= htmlspecialchars($message['text']) ?>
-        </div>
-    <?php endif; ?>
+    <!-- Search Form -->
+    <form method="GET" action="index.php" style="margin-bottom: 20px;">
+        <input type="text" name="search" value="<?= htmlspecialchars($searchTerm) ?>" placeholder="Search by name" style="padding: 5px;">
+        <button type="submit" style="padding: 5px; background-color: #007bff; color: white; border: none;">Search</button>
+    </form>
 
     <a href="create.php" style="display: inline-block; margin-bottom: 20px; text-decoration: none; color: white; background-color: #007bff; padding: 10px; border-radius: 5px;">Add New Applicant</a>
+
+    <!-- Display System Message -->
+    <?php if ($message): ?>
+            <div id="system-message" class="message <?= $message['type'] ?>">
+                <?= htmlspecialchars($message['text']) ?>
+            </div>
+    <?php endif; ?>
 
     <table border="1">
         <thead>
             <tr>
-                <!-- Adjust table headers based on your database columns -->
                 <th>ID</th>
                 <th>First Name</th>
                 <th>Last Name</th>
